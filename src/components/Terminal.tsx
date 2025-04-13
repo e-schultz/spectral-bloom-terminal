@@ -134,7 +134,7 @@ Glitch resolved. System returning to normal operation. Anomalous data fragment s
         {output}
       </div>
       <form onSubmit={handleSubmit} className="flex items-center">
-        <span className="text-terminal-primary mr-2.5 animate-blink">></span>
+        <span className="text-terminal-primary mr-2.5 animate-blink">{`>`}</span>
         <input
           ref={inputRef}
           type="text"

@@ -1,3 +1,6 @@
+
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -33,69 +36,82 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
-
-@layer base {
   * {
-    @apply border-border;
+    @apply box-border m-0 p-0;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-terminal-bg text-terminal-text font-vt323 m-0 p-0 leading-relaxed relative overflow-x-hidden;
+  }
+}
+
+/* CRT and scanline effects */
+@layer components {
+  .scanline-effect::before {
+    content: "";
+    @apply fixed top-0 left-0 w-full h-full pointer-events-none z-[1000] animate-scanlines;
+    background: linear-gradient(
+      transparent 0%,
+      rgba(32, 32, 32, 0.1) 50%,
+      transparent 100%
+    );
+    background-size: 100% 4px;
+  }
+
+  .crt-flicker::after {
+    content: "";
+    @apply fixed top-0 left-0 w-full h-full bg-[rgba(18,16,16,0.05)] opacity-0 pointer-events-none z-[1001] animate-flicker;
+  }
+
+  .glitch-text {
+    @apply relative animate-glitch-skew;
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    @apply absolute top-0 left-0 w-full h-full opacity-80;
+  }
+
+  .glitch-text::before {
+    @apply text-terminal-glitch animate-glitch-anim left-[2px];
+    clip: rect(44px, 450px, 56px, 0);
+  }
+
+  .glitch-text::after {
+    @apply text-terminal-secondary animate-glitch-anim2 left-[-2px];
+    clip: rect(44px, 450px, 56px, 0);
+  }
+
+  .status-active::before {
+    content: "●";
+    @apply mr-[5px] animate-pulse;
+  }
+
+  .thread-title::before {
+    content: ">";
+    @apply mr-[10px] text-terminal-primary animate-blink;
+  }
+
+  .task-list li::before {
+    content: "□";
+    @apply mr-[10px] text-terminal-tertiary;
+  }
+
+  .task-list li.completed::before {
+    content: "■";
+    @apply text-terminal-success;
+  }
+
+  .memory-fragment::before {
+    content: "«";
+    @apply absolute left-[-10px] text-terminal-tertiary;
+  }
+
+  .memory-fragment::after {
+    content: "»";
+    @apply absolute bottom-[-10px] right-[10px] text-terminal-tertiary;
   }
 }

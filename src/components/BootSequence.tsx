@@ -26,6 +26,7 @@ const BootSequence = ({ onComplete }: BootSequenceProps) => {
     let currentLine = 0;
     let currentChar = 0;
     let interval: ReturnType<typeof setInterval>;
+    let timeout: ReturnType<typeof setTimeout>;
     
     // Type out the boot messages character by character
     const typeBootText = () => {
@@ -47,8 +48,9 @@ const BootSequence = ({ onComplete }: BootSequenceProps) => {
               clearInterval(interval);
               
               // Complete boot sequence after a delay
-              setTimeout(() => {
+              timeout = setTimeout(() => {
                 setHidden(true);
+                // Ensure the completion callback is called after the fade-out
                 setTimeout(() => onComplete(), 1000);
               }, 1500);
             }
@@ -59,7 +61,11 @@ const BootSequence = ({ onComplete }: BootSequenceProps) => {
     
     typeBootText();
     
-    return () => clearInterval(interval);
+    // Clear all timers on component unmount
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
   }, [onComplete, bootMessages]);
 
   return (

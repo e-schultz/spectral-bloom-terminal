@@ -23,10 +23,12 @@ const BootSequence = ({ onComplete }: BootSequenceProps) => {
   ];
 
   useEffect(() => {
+    console.log("Boot sequence started");
     let currentLine = 0;
     let currentChar = 0;
     let interval: ReturnType<typeof setInterval>;
-    let timeout: ReturnType<typeof setTimeout>;
+    let completeTimeout: ReturnType<typeof setTimeout>;
+    let fadeTimeout: ReturnType<typeof setTimeout>;
     
     // Type out the boot messages character by character
     const typeBootText = () => {
@@ -46,12 +48,18 @@ const BootSequence = ({ onComplete }: BootSequenceProps) => {
             
             if (currentLine === bootMessages.length) {
               clearInterval(interval);
+              console.log("Boot messages complete, preparing to finish boot sequence");
               
               // Complete boot sequence after a delay
-              timeout = setTimeout(() => {
+              completeTimeout = setTimeout(() => {
+                console.log("Setting boot sequence to hidden");
                 setHidden(true);
-                // Ensure the completion callback is called after the fade-out
-                setTimeout(() => onComplete(), 1000);
+                
+                // Explicitly call onComplete after a short delay to ensure animation completes
+                fadeTimeout = setTimeout(() => {
+                  console.log("Calling onComplete callback");
+                  onComplete();
+                }, 1000);
               }, 1500);
             }
           }
@@ -59,12 +67,24 @@ const BootSequence = ({ onComplete }: BootSequenceProps) => {
       }, 50); // typing speed
     };
     
+    // Start the boot sequence
     typeBootText();
+    
+    // Direct fallback to ensure boot sequence completes
+    const fallbackTimer = setTimeout(() => {
+      console.log("Boot sequence internal fallback triggered");
+      clearInterval(interval);
+      setHidden(true);
+      onComplete();
+    }, 15000); // 15 seconds max for boot sequence
     
     // Clear all timers on component unmount
     return () => {
+      console.log("Cleaning up boot sequence timers");
       clearInterval(interval);
-      clearTimeout(timeout);
+      clearTimeout(completeTimeout);
+      clearTimeout(fadeTimeout);
+      clearTimeout(fallbackTimer);
     };
   }, [onComplete, bootMessages]);
 

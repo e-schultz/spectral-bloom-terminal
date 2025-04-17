@@ -12,26 +12,31 @@ const Index = () => {
 
   // Function to handle boot completion
   const handleBootComplete = () => {
+    console.log("Boot sequence completion handler called");
     setBooting(false);
-    console.log("Boot sequence completed");
   };
 
   // Ensure the boot sequence doesn't get stuck
   useEffect(() => {
-    // Fallback timer to ensure boot sequence doesn't get stuck
+    console.log("Setting up fallback timer for boot sequence");
+    
+    // Aggressive fallback timer to ensure boot sequence doesn't get stuck
     const fallbackTimer = setTimeout(() => {
       if (booting) {
-        console.log("Boot sequence fallback triggered");
+        console.log("Boot sequence parent fallback triggered - forcing completion");
         setBooting(false);
       }
-    }, 20000); // 20 seconds max for boot sequence
+    }, 10000); // 10 seconds max for boot sequence
     
-    return () => clearTimeout(fallbackTimer);
+    return () => {
+      console.log("Cleaning up fallback timer");
+      clearTimeout(fallbackTimer);
+    };
   }, [booting]);
 
   return (
     <div className="min-h-screen scanline-effect crt-flicker">
-      {booting && <BootSequence onComplete={handleBootComplete} />}
+      {booting ? <BootSequence onComplete={handleBootComplete} /> : null}
       
       <div className="max-w-screen-xl mx-auto p-5 relative z-10">
         <Header />

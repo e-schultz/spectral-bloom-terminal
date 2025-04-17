@@ -1,15 +1,60 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface BootSequenceProps {
   onComplete: () => void;
 }
 
 const BootSequence = ({ onComplete }: BootSequenceProps) => {
-  const [progress, setProgress] = useState(0);
-  const [bootText, setBootText] = useState('');
-  const [hidden, setHidden] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const hasCalledComplete = useRef(false);
 
+  useEffect(() => {
+    console.log("Boot sequence mounted");
+    
+    // Set a simple timeout to complete the boot sequence after animation
+    const timer = setTimeout(() => {
+      console.log("Boot sequence animation complete");
+      setIsComplete(true);
+      
+      // Add a short delay before calling onComplete to allow for fade-out animation
+      const completeTimer = setTimeout(() => {
+        if (!hasCalledComplete.current) {
+          console.log("Calling onComplete callback");
+          hasCalledComplete.current = true;
+          onComplete();
+        }
+      }, 1000);
+      
+      return () => clearTimeout(completeTimer);
+    }, 5000); // Show boot sequence for 5 seconds total
+    
+    // Clear timers if unmounted early
+    return () => {
+      console.log("Boot sequence unmounted early");
+      clearTimeout(timer);
+    };
+  }, [onComplete]);
+  
+  return (
+    <div className={`fixed top-0 left-0 w-full h-full bg-terminal-bg flex flex-col justify-center items-center z-50 transition-opacity duration-1000 ${isComplete ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className="text-terminal-primary font-terminal text-base max-w-[80%] mx-auto">
+        <BootText />
+      </div>
+      <div className="w-4/5 h-5 bg-terminal-header border border-terminal-primary mt-5 relative overflow-hidden">
+        <div 
+          className="h-full bg-terminal-primary transition-all duration-500 ease-out"
+          style={{ width: `100%`, animationName: 'progress', animationDuration: '5s', animationTimingFunction: 'linear' }}
+        ></div>
+      </div>
+    </div>
+  );
+};
+
+// Separate component for boot text with its own state
+const BootText = () => {
+  const [text, setText] = useState('');
+  
   const bootMessages = [
     "INITIALIZING SPECTRAL INTERFACE...",
     "QUANTUM ENTANGLEMENT ESTABLISHED...",
@@ -21,86 +66,27 @@ const BootSequence = ({ onComplete }: BootSequenceProps) => {
     "ESTABLISHING CONNECTIONS TO THE BEYOND...",
     "SYSTEM READY: WELCOME TO HAUNTOLOGY BBS"
   ];
-
+  
   useEffect(() => {
-    console.log("Boot sequence started");
-    let currentLine = 0;
-    let currentChar = 0;
-    let interval: ReturnType<typeof setInterval>;
-    let completeTimeout: ReturnType<typeof setTimeout>;
-    let fadeTimeout: ReturnType<typeof setTimeout>;
+    let isMounted = true;
+    const fullText = bootMessages.join('\n');
+    const displayText = [];
     
-    // Type out the boot messages character by character
-    const typeBootText = () => {
-      interval = setInterval(() => {
-        if (currentLine < bootMessages.length) {
-          if (currentChar < bootMessages[currentLine].length) {
-            setBootText(prev => prev + bootMessages[currentLine][currentChar]);
-            currentChar++;
-          } else {
-            setBootText(prev => prev + '\n');
-            currentLine++;
-            currentChar = 0;
-            
-            // Update progress bar based on completed lines
-            const newProgress = Math.min(100, Math.floor((currentLine / bootMessages.length) * 100));
-            setProgress(newProgress);
-            
-            if (currentLine === bootMessages.length) {
-              clearInterval(interval);
-              console.log("Boot messages complete, preparing to finish boot sequence");
-              
-              // Complete boot sequence after a delay
-              completeTimeout = setTimeout(() => {
-                console.log("Setting boot sequence to hidden");
-                setHidden(true);
-                
-                // Explicitly call onComplete after a short delay to ensure animation completes
-                fadeTimeout = setTimeout(() => {
-                  console.log("Calling onComplete callback");
-                  onComplete();
-                }, 1000);
-              }, 1500);
-            }
-          }
+    for (let i = 0; i < fullText.length; i++) {
+      const char = fullText[i];
+      setTimeout(() => {
+        if (isMounted) {
+          setText(prev => prev + char);
         }
-      }, 50); // typing speed
-    };
+      }, i * 40); // Typing speed
+    }
     
-    // Start the boot sequence
-    typeBootText();
-    
-    // Direct fallback to ensure boot sequence completes
-    const fallbackTimer = setTimeout(() => {
-      console.log("Boot sequence internal fallback triggered");
-      clearInterval(interval);
-      setHidden(true);
-      onComplete();
-    }, 15000); // 15 seconds max for boot sequence
-    
-    // Clear all timers on component unmount
     return () => {
-      console.log("Cleaning up boot sequence timers");
-      clearInterval(interval);
-      clearTimeout(completeTimeout);
-      clearTimeout(fadeTimeout);
-      clearTimeout(fallbackTimer);
+      isMounted = false;
     };
-  }, [onComplete, bootMessages]);
-
-  return (
-    <div className={`fixed top-0 left-0 w-full h-full bg-terminal-bg flex flex-col justify-center items-center z-50 transition-opacity duration-1000 ${hidden ? 'opacity-0 pointer-events-none' : ''}`}>
-      <pre className="text-terminal-primary font-terminal text-base whitespace-pre text-left max-w-[80%] mx-auto">
-        {bootText}
-      </pre>
-      <div className="w-4/5 h-5 bg-terminal-header border border-terminal-primary mt-5 relative overflow-hidden">
-        <div 
-          className="h-full bg-terminal-primary transition-all duration-500 ease-out"
-          style={{ width: `${progress}%` }}
-        ></div>
-      </div>
-    </div>
-  );
+  }, []);
+  
+  return <pre className="whitespace-pre-wrap">{text}</pre>;
 };
 
 export default BootSequence;
